@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub Compare Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: left-rail contents on wide screens, single column on phones. Dark-first, matching the app and the other guides. */
+  :root {
+    --bg: #121623; --surface: #1a1f2e; --surface-2: #232a3b; --fg: #e7eaf1; --fg-muted: #a3abbd; --line: #313a4e;
+    --accent: #5cc3cf; --accent-soft: #163a41; --measure: #f2a93b; --measure-soft: #3b2c12;
+    --warn: #f08a74; --warn-soft: #42241d; --ok: #7fcf8f; --ok-soft: #1d3625; --info: #7fb3ff; --info-soft: #1d2d4a;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f4f6f9; --surface: #ffffff; --surface-2: #e9edf3; --fg: #1b2130; --fg-muted: #5a6478; --line: #d3d9e3;
+      --accent: #0b6e7a; --accent-soft: #d6ecef; --measure: #b06400; --measure-soft: #fdefd9;
+      --warn: #a3412d; --warn-soft: #fbe5e0; --ok: #2f7a3e; --ok-soft: #dff1e2; --info: #2b63c4; --info-soft: #dde8fb;
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f6f9; --surface: #ffffff; --surface-2: #e9edf3; --fg: #1b2130; --fg-muted: #5a6478; --line: #d3d9e3;
+    --accent: #0b6e7a; --accent-soft: #d6ecef; --measure: #b06400; --measure-soft: #fdefd9;
+    --warn: #a3412d; --warn-soft: #fbe5e0; --ok: #2f7a3e; --ok-soft: #dff1e2; --info: #2b63c4; --info-soft: #dde8fb;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.6; margin: 0; }
+  a { color: var(--accent); }
+  code { font-family: var(--font-mono); font-size: 0.88em; background: var(--surface-2); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding-block: 32px 64px; padding-inline: 20px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; }
+  @media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); } .toc { position: static !important; } }
+  .toc { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; font-size: 14px; padding-top: 8px; }
+  .toc .label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); font-weight: 600; margin-bottom: 8px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .toc a { color: var(--fg); text-decoration: none; display: block; padding: 3px 0 3px 10px; border-left: 2px solid var(--line); }
+  .toc a:hover { border-left-color: var(--accent); color: var(--accent); }
+
+  main { min-width: 0; }
+  header.hero { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 36px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-size: clamp(28px, 4vw, 38px); line-height: 1.15; margin: 6px 0 12px; text-wrap: balance; font-weight: 700; }
+  .lede { font-size: 18px; color: var(--fg-muted); max-width: 66ch; margin: 0; }
+
+  section { margin-bottom: 52px; }
+  h2 { font-size: 24px; margin: 0 0 14px; padding-top: 8px; scroll-margin-top: 16px; text-wrap: balance; }
+  h3 { font-size: 17px; margin: 26px 0 8px; }
+  p, li { max-width: 72ch; }
+  ul, ol { padding-left: 22px; }
+  li { margin-bottom: 5px; }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.measure { border-color: var(--measure); background: var(--measure-soft); }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 8px; }
+  .callout strong:first-child { display: block; margin-bottom: 4px; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { background: var(--surface-2); font-weight: 600; font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  td.yes { color: var(--ok); font-weight: 600; white-space: nowrap; }
+  td.no { color: var(--warn); font-weight: 600; white-space: nowrap; }
+  td code { white-space: nowrap; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin: 14px 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+  .card h4 { margin: 0 0 6px; font-size: 15px; }
+  .card p { margin: 0; font-size: 14.5px; color: var(--fg-muted); }
+
+  pre { font-family: var(--font-mono); font-size: 13px; line-height: 1.55; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: var(--fg-muted); }
+  pre .k { color: var(--accent); }
+  pre .m { color: var(--measure); }
+  .figcap { font-size: 13.5px; color: var(--fg-muted); margin: -4px 0 14px; }
+
+  /* Pipelines: an ordered sequence, so the step numbers carry meaning. */
+  .pipeline { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 10px; counter-reset: step; }
+  .pipeline > li { counter-increment: step; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; max-width: none; margin: 0; }
+  .pipeline > li::before { content: counter(step); font-family: var(--font-mono); font-weight: 600; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+  .pipeline h4 { margin: 3px 0 4px; font-size: 15.5px; }
+  .pipeline p { margin: 0; font-size: 14.5px; }
+  .pipeline .files { margin-top: 6px; font-size: 13px; color: var(--fg-muted); }
+
+  .diagram { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 10px; margin: 16px 0 6px; }
+  .diagram svg { display: block; min-width: 680px; width: 100%; height: auto; }
+  .diagram text { font-family: var(--font-body); }
+  .d-app { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.5; }
+  .d-new { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+  .d-shared { fill: var(--surface); stroke: var(--fg-muted); stroke-width: 1.5; stroke-dasharray: 6 5; }
+  .d-src { fill: var(--measure-soft); stroke: var(--measure); stroke-width: 1.5; }
+  .d-b { fill: var(--fg); font-size: 14px; font-weight: 600; }
+  .d-t { fill: var(--fg); font-size: 13px; }
+  .d-m { fill: var(--fg-muted); font-size: 12px; }
+  .d-c { fill: var(--fg); font-family: var(--font-mono) !important; font-size: 12px; }
+  .d-a { fill: var(--accent); font-family: var(--font-mono) !important; font-size: 11.5px; }
+  .d-line { stroke: var(--fg-muted); stroke-width: 1.6; fill: none; }
+  .d-dash { stroke: var(--fg-muted); stroke-width: 1.4; fill: none; stroke-dasharray: 4 4; }
+  .d-head { fill: var(--fg-muted); }
+
+  dl.gloss { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 8px 16px; margin: 12px 0; }
+  dl.gloss dt { font-weight: 600; }
+  dl.gloss dd { margin: 0; color: var(--fg-muted); max-width: 70ch; }
+  @media (max-width: 560px) { dl.gloss { grid-template-columns: minmax(0, 1fr); } dl.gloss dd { margin-bottom: 8px; } }
+  footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 16px; font-size: 13.5px; color: var(--fg-muted); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="toc" aria-label="Contents">
+    <div class="label">Contents</div>
+    <ol>
+      <li><a href="#short">1. The short version</a></li>
+      <li><a href="#two">2. App vs GitHub compare</a></li>
+      <li><a href="#where">3. Where the code is</a></li>
+      <li><a href="#reuse">4. How it reuses the app</a></li>
+      <li><a href="#picks">5. What it compares</a></li>
+      <li><a href="#reads">6. How it reads GitHub</a></li>
+      <li><a href="#utils">7. How mfd_utils runs it</a></li>
+      <li><a href="#build">8. Build, test, release</a></li>
+      <li><a href="#change">9. Changing it safely</a></li>
+      <li><a href="#limits">10. Limits</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">How it works · GitHub</div>
+      <h1>GitHub Compare Guide</h1>
+      <p class="lede">The app compares versions of a project from the local clone you open in the browser. This guide covers the second way to run the same comparison: straight from GitHub, without a clone, which is what <code>mfd_utils.pbip_compare</code> uses. It covers where that code lives, how it reuses the app, and how it is built and released.</p>
+    </header>
+
+    <section id="short">
+      <h2>1. The short version</h2>
+      <p>All of the GitHub code is in one folder, <code>integrations/github-compare/</code>, plus one workflow file. It reads a PBIP repository through the GitHub API, runs the app's own compare engine on it, and writes a single HTML file with the app's Version Compare and Model Diagram views.</p>
+      <div class="grid">
+        <div class="card"><h4>The app is unchanged</h4><p>It still reads only your local folder and its <code>.git</code> history, in the browser. It never calls GitHub.</p></div>
+        <div class="card"><h4>Nothing in the app was edited</h4><p>The new folder only <em>reads</em> <code>packages/core</code>, two views in <code>src/ui</code>, and <code>styles/main.css</code> when it builds.</p></div>
+        <div class="card"><h4>One engine, two front doors</h4><p>A fix to the compare engine or those views shows up in both the app and the GitHub report.</p></div>
+      </div>
+    </section>
+
+    <section id="two">
+      <h2>2. The app vs GitHub compare</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Lineage Explorer app</th><th>GitHub compare</th></tr></thead>
+          <tbody>
+            <tr><td>Where the PBIP files come from</td><td>Your local clone, picked in the browser (File System Access API); history from its <code>.git</code> folder via isomorphic-git</td><td>The GitHub API, with a token. Nothing is cloned.</td></tr>
+            <tr><td>How you start it</td><td><code>start.bat</code> / <code>start.command</code> / <code>npm run dev</code></td><td><code>pbip_compare.compare(...)</code> or <code>python -m mfd_utils.pbip_compare</code>; or <code>node dist/pbip-compare.mjs</code> directly</td></tr>
+            <tr><td>What it compares</td><td>Each of the last commits with its parent</td><td>A head branch with its base ("All changes"), then each branch commit with its parent</td></tr>
+            <tr><td>Output</td><td>Interactive views in the app, alongside lineage, measures and visuals</td><td>One self-contained <code>.html</code> report (Version Compare + Model Diagram) and a <code>records.json</code></td></tr>
+            <tr><td>Code</td><td><code>index.html</code>, <code>src/</code>, <code>packages/core</code></td><td><code>integrations/github-compare/</code>, reusing <code>packages/core</code> and two views</td></tr>
+            <tr><td>Needs network</td><td class="no">No</td><td class="yes">Yes, <code>api.github.com</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The <a href="COMMIT-COMPARISON-GUIDE.html">Commit Comparison Guide</a> explains the app's side: how it reads <code>.git</code> and what each compare tab does. Those comparison rules are the same in both.</p>
+    </section>
+
+    <section id="where">
+      <h2>3. Where the code is</h2>
+<pre><span class="k">integrations/github-compare/</span>           <span class="c">all of the GitHub comparison code</span>
+├── src/sources/githubSource.js     <span class="c">reads commits and files from the GitHub API</span>
+├── src/refs.js                     <span class="c">picks the head and base branches</span>
+├── src/history.js                  <span class="c">builds "All changes" and the per-commit comparisons</span>
+├── src/payload.js                  <span class="c">what the report embeds (gzipped)</span>
+├── src/records.js                  <span class="c">flat rows for records.json</span>
+├── src/report/report.html, entry.js  <span class="c">the report page; mounts the two existing views</span>
+├── cli/pbip-compare.js             <span class="c">the command mfd_utils runs: arguments, exit codes, summary</span>
+├── build/build.mjs                 <span class="c">builds dist/pbip-compare.mjs (CLI + core + report in one file)</span>
+├── tests/                          <span class="c">14 offline tests using public/sample-pbip</span>
+└── README.md, package.json, package-lock.json, .gitignore
+<span class="k">.github/workflows/pbip-compare-release.yml</span>   <span class="c">builds, tests and publishes the release</span></pre>
+      <p>The folder has its own <code>package.json</code> and lockfile, outside <code>packages/</code>, so it is not part of the root npm workspace: the root <code>package-lock.json</code>, <code>npm run dev</code>, <code>npm run build</code> and the root test suite (<code>packages/core/tests</code>) are all unaffected. <code>dist/</code>, <code>node_modules/</code> and <code>out/</code> inside it are ignored by git.</p>
+    </section>
+
+    <section id="reuse">
+      <h2>4. How it reuses the app</h2>
+      <div class="diagram" role="img" aria-labelledby="reuseTitle">
+        <svg viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg">
+          <title id="reuseTitle">The app and GitHub compare share the compare engine and views, but read files from different places</title>
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="d-head" d="M0 0 L10 5 L0 10 z"/></marker>
+          </defs>
+          <rect class="d-app" x="20" y="20" width="260" height="76" rx="10"/>
+          <text class="d-b" x="38" y="48">Lineage Explorer app</text>
+          <text class="d-c" x="38" y="70">index.html · src/</text>
+          <text class="d-m" x="38" y="88">in the browser · unchanged</text>
+
+          <rect class="d-new" x="620" y="20" width="260" height="76" rx="10"/>
+          <text class="d-b" x="638" y="48">GitHub compare</text>
+          <text class="d-c" x="638" y="70">integrations/github-compare/</text>
+          <text class="d-m" x="638" y="88">Node · run by mfd_utils · new</text>
+
+          <rect class="d-shared" x="320" y="110" width="260" height="128" rx="10"/>
+          <text class="d-b" x="338" y="136">Shared, unchanged</text>
+          <text class="d-c" x="338" y="160">packages/core</text>
+          <text class="d-c" x="338" y="180">src/ui/versionCompareView.js</text>
+          <text class="d-c" x="338" y="200">src/ui/modelDiagramView.js</text>
+          <text class="d-c" x="338" y="220">styles/main.css</text>
+
+          <path class="d-line" d="M280 58 L300 58 L300 150 L318 150" marker-end="url(#ah)"/>
+          <text class="d-a" x="292" y="112" text-anchor="end">uses</text>
+          <path class="d-dash" d="M620 58 L600 58 L600 150 L582 150" marker-end="url(#ah)"/>
+          <text class="d-a" x="608" y="112">imports at build</text>
+
+          <rect class="d-src" x="20" y="264" width="260" height="76" rx="10"/>
+          <text class="d-b" x="38" y="292">Your local clone</text>
+          <text class="d-t" x="38" y="314">folder + its .git history</text>
+          <text class="d-m" x="38" y="332">File System Access API, isomorphic-git</text>
+
+          <rect class="d-src" x="620" y="264" width="260" height="76" rx="10"/>
+          <text class="d-b" x="638" y="292">GitHub API</text>
+          <text class="d-t" x="638" y="314">PRs · compare · trees · files</text>
+          <text class="d-m" x="638" y="332">with the caller's token</text>
+
+          <path class="d-line" d="M150 96 L150 262" marker-end="url(#ah)"/>
+          <text class="d-a" x="160" y="184">reads</text>
+          <path class="d-line" d="M750 96 L750 262" marker-end="url(#ah)"/>
+          <text class="d-a" x="740" y="184" text-anchor="end">reads</text>
+        </svg>
+      </div>
+      <p class="figcap">Solid line: used at run time. Dashed: bundled in when <code>npm run build</code> runs in the new folder. Neither side changes the shared files.</p>
+      <ul>
+        <li><strong>Compare engine:</strong> <code>history.js</code> calls the core's <code>buildSnapshot</code> and <code>compareSnapshots</code>, exactly as the app's <code>src/parser/snapshotScanner.js</code> does, so both produce the same records for the same two versions.</li>
+        <li><strong>Views:</strong> the report page mounts <code>versionCompareView.js</code> and <code>modelDiagramView.js</code> through their existing <code>init…</code> / <code>set…</code> functions, the same way <code>src/main.js</code> does.</li>
+        <li><strong>One copied piece:</strong> <code>history.js</code> repeats about 100 lines of the scanner's commit-pairing logic, because the original is tied to a browser folder handle and wasn't refactored.</li>
+      </ul>
+    </section>
+
+    <section id="picks">
+      <h2>5. What it compares</h2>
+      <ol class="pipeline">
+        <li><div><h4>Choose head</h4><p>An explicit <code>--head</code> or <code>--pr</code>; otherwise the newest open pull request; otherwise the most recently pushed branch other than the default branch. Otherwise it stops and asks for one.</p><div class="files">src/refs.js</div></div></li>
+        <li><div><h4>Choose base</h4><p>An explicit <code>--base</code>; otherwise the pull request's base branch; otherwise the repository's default branch.</p><div class="files">src/refs.js</div></div></li>
+        <li><div><h4>"All changes"</h4><p>The latest commit on base against the latest commit on head (tip to tip). If base has commits the branch doesn't, the report warns that some differences come from base.</p><div class="files">src/history.js</div></div></li>
+        <li><div><h4>Each branch commit</h4><p>Every commit on head that isn't on base, newest first, each against its first parent: the same rule the app uses. Up to <code>--max-commits</code> (default 30).</p><div class="files">src/history.js</div></div></li>
+      </ol>
+      <p>The report header states which rule chose head, so an automatic choice is always visible.</p>
+    </section>
+
+    <section id="reads">
+      <h2>6. How it reads GitHub</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>What</th><th>GitHub API</th></tr></thead>
+          <tbody>
+            <tr><td>Default branch</td><td><code>GET /repos/{repo}</code></td></tr>
+            <tr><td>Newest open pull request</td><td><code>GET /repos/{repo}/pulls?state=open&amp;sort=updated</code></td></tr>
+            <tr><td>Most recently pushed branch</td><td><code>GET /repos/{repo}/activity?activity_type=push</code> (falls back to branch tip dates)</td></tr>
+            <tr><td>Branch commits, and how far base is ahead</td><td><code>GET /repos/{repo}/compare/{base}...{head}</code></td></tr>
+            <tr><td>PBIP files in a version</td><td><code>GET /repos/{repo}/git/trees/{sha}?recursive=1</code></td></tr>
+            <tr><td>File contents</td><td><code>GET /repos/{repo}/tarball/{sha}</code> when more than 100 of a version's files aren't cached yet; <code>GET /repos/{repo}/git/blobs/{sha}</code> for the rest</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>It keeps the same files the app does: <code>.tmdl</code>, <code>.json</code> and <code>.pbir</code>, skipping <code>.pbi/</code> and <code>node_modules/</code>, grouped by <code>*.SemanticModel</code> and <code>*.Report</code> folder. Files are cached by git blob id, so each file version downloads once however many commits contain it. On <code>pbiws_area_dashboards</code> (about 2,300 PBIP files), a one-commit pull request took 7 seconds and 70 requests; a 20-commit range took 32 seconds and 231 requests.</p>
+      <p>The report embeds the computed comparison, not the raw files, gzipped and base64-encoded, and the browser unpacks it with <code>DecompressionStream</code>. The pull request above made a 300 KB report.</p>
+    </section>
+
+    <section id="utils">
+      <h2>7. How mfd_utils runs it</h2>
+      <ol class="pipeline">
+        <li><div><h4>Download the engine</h4><p>mfd_utils reads the <code>pbip-compare-main-latest</code> release of this repository, downloads <code>pbip-compare.mjs</code> when the release has a new build, checks it against <code>pbip-compare.mjs.sha256</code>, and caches it.</p><div class="files">mfd_utils: pbip_compare/tool.py</div></div></li>
+        <li><div><h4>Check the contract</h4><p>It runs <code>node pbip-compare.mjs --version</code> and refuses a build whose <code>contract</code> number it doesn't know.</p><div class="files">cli/pbip-compare.js · mfd_utils: pbip_compare/runner.py</div></div></li>
+        <li><div><h4>Run it</h4><p>It passes the repository and branch choices as arguments and the token as <code>GITHUB_TOKEN</code>, then reads the JSON summary on the last line of output, <code>report.html</code> and <code>records.json</code>.</p><div class="files">mfd_utils: pbip_compare/runner.py</div></div></li>
+      </ol>
+<pre><span class="c"># what a user types</span>
+<span class="k">from</span> mfd_utils <span class="k">import</span> pbip_compare
+pbip_compare.compare(<span class="m">"pbiws_area_dashboards"</span>, token=token)
+<span class="c"># or</span>
+python -m mfd_utils.pbip_compare pbiws_area_dashboards --pr 23
+
+<span class="c"># what mfd_utils runs</span>
+node pbip-compare.mjs --repo MFD-Eng/pbiws_area_dashboards --pr 23 --max-commits 30 --out &lt;file&gt;.html --json &lt;file&gt;_records.json</pre>
+      <h3>The contract</h3>
+<pre>node pbip-compare.mjs --repo &lt;owner/name&gt; [--head &lt;branch&gt; | --pr &lt;n&gt;] [--base &lt;ref&gt;]
+                      [--max-commits 30] [--out report.html] [--json records.json]
+node pbip-compare.mjs --version        <span class="c">→ {"version": "0.1.0", "commit": "…", "contract": 1}</span>
+
+env     GITHUB_TOKEN   <span class="c">never an argument, never written to output</span>
+stdout  last line: JSON summary (html, json, base, head, headReason, baseAheadBy, branchCommits,
+        pairs, records, overall, warnings, githubRequests, seconds, htmlBytes)
+exit    0 ok · 2 bad arguments · 3 auth · 4 not found / nothing to compare · 5 partial</pre>
+    </section>
+
+    <section id="build">
+      <h2>8. Build, test, release</h2>
+<pre>cd integrations/github-compare
+npm install
+npm run build        <span class="c"># → dist/pbip-compare.mjs and .sha256</span>
+npm test             <span class="c"># 14 offline tests</span>
+
+<span class="c"># try it against a real repository</span>
+GITHUB_TOKEN=$(gh auth token) node dist/pbip-compare.mjs --repo MFD-Eng/pbiws_area_dashboards --out report.html</pre>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Event</th><th>Workflow does</th><th>Release</th></tr></thead>
+          <tbody>
+            <tr><td>Pull request touching the folder, the core, the two views, <code>lineageView.js</code> or <code>styles/main.css</code></td><td>Build and test</td><td>None</td></tr>
+            <tr><td>Push to <code>main</code> touching the same files</td><td>Build, test, replace the release</td><td><code>pbip-compare-main-latest</code> (pre-release), used by <code>tool_version="main"</code></td></tr>
+            <tr><td>Run workflow manually on <code>main</code></td><td>Build, test, publish</td><td><code>pbip-compare-v&lt;version in package.json&gt;</code>, used by <code>tool_version="v0.1.0"</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The release tags start with <code>pbip-compare-</code> so they never collide with releases of the app itself. The existing <code>deploy.yml</code> workflow is untouched.</p>
+    </section>
+
+    <section id="change">
+      <h2>9. Changing it safely</h2>
+      <ul>
+        <li><strong>Changing the core or the two views changes the GitHub report too</strong>, on the next push to <code>main</code>. Run <code>npm test</code> in the folder as well as the root tests.</li>
+        <li><strong>Raise <code>contract</code></strong> in <code>cli/pbip-compare.js</code> only for breaking changes to the arguments, the summary or <code>records.json</code>, and update mfd_utils to match. Older mfd_utils versions will refuse the new build with a clear message instead of misreading it.</li>
+        <li><strong>Bump <code>version</code></strong> in the folder's <code>package.json</code> before running the workflow manually, so people can pin the release.</li>
+        <li><strong><code>highlightDax</code> is read from <code>src/ui/lineageView.js</code> at build time</strong> instead of bundling that whole file. If its <code>DAX_FUNCTIONS</code>, <code>esc</code> or <code>highlightDax</code> blocks are restructured, the build fails with a message naming <code>build/build.mjs</code>.</li>
+      </ul>
+      <div class="callout warn">
+        <p><strong>Known app bug found while building this</strong></p>
+        <p><code>src/ui/lineageTree.js</code> declares <code>isVertical</code> with <code>const</code> near line 517 and reassigns it near line 521, so the lineage tree throws a TypeError when source-first mode falls back. Vite builds it anyway; esbuild refuses it, which is why the report build avoids bundling <code>lineageView.js</code>. Changing <code>const</code> to <code>let</code> there fixes the app.</p>
+      </div>
+    </section>
+
+    <section id="limits">
+      <h2>10. Limits</h2>
+      <ul>
+        <li>Only GitHub is supported as a source. A local-clone source for the command line is not built yet; the app remains the way to compare a local clone.</li>
+        <li>"All changes" is tip to tip, so when base has moved on, base's newer work also shows up. The per-commit entries show only the branch's own changes.</li>
+        <li>The views' own wording assumes one commit, so the "All changes" entry is labelled with "parent commit" and "this commit". The report header explains the comparison.</li>
+        <li>Each run counts against the token's 5,000 GitHub requests per hour.</li>
+        <li>Reports contain DAX, M and filter values from the repository. Share them like the repository itself.</li>
+      </ul>
+      <dl class="gloss">
+        <dt>Head</dt><dd>The branch being reviewed.</dd>
+        <dt>Base</dt><dd>The branch it's compared with, usually the pull request's target.</dd>
+        <dt>Tip</dt><dd>The latest commit on a branch.</dd>
+        <dt>Contract</dt><dd>The version number of the command-line interface mfd_utils relies on.</dd>
+        <dt>main-latest</dt><dd>The release rebuilt from every push to <code>main</code>.</dd>
+      </dl>
+    </section>
+
+    <footer>PBIP Lineage Explorer (Abearstudios build), based on the open-source PBIP Lineage Explorer by Jihwan Kim. Companion to the Commit Comparison Guide, Technical Guide and User Guide in this folder, and to <code>integrations/github-compare/README.md</code>.</footer>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commit Comparison Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: left-rail contents on wide screens, single column on phones. Dark-first, matching the app and the other guides. */
+  :root {
+    --bg: #121623; --surface: #1a1f2e; --surface-2: #232a3b; --fg: #e7eaf1; --fg-muted: #a3abbd; --line: #313a4e;
+    --accent: #5cc3cf; --accent-soft: #163a41; --measure: #f2a93b; --measure-soft: #3b2c12;
+    --warn: #f08a74; --warn-soft: #42241d; --ok: #7fcf8f; --ok-soft: #1d3625; --info: #7fb3ff; --info-soft: #1d2d4a;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f4f6f9; --surface: #ffffff; --surface-2: #e9edf3; --fg: #1b2130; --fg-muted: #5a6478; --line: #d3d9e3;
+      --accent: #0b6e7a; --accent-soft: #d6ecef; --measure: #b06400; --measure-soft: #fdefd9;
+      --warn: #a3412d; --warn-soft: #fbe5e0; --ok: #2f7a3e; --ok-soft: #dff1e2; --info: #2b63c4; --info-soft: #dde8fb;
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f6f9; --surface: #ffffff; --surface-2: #e9edf3; --fg: #1b2130; --fg-muted: #5a6478; --line: #d3d9e3;
+    --accent: #0b6e7a; --accent-soft: #d6ecef; --measure: #b06400; --measure-soft: #fdefd9;
+    --warn: #a3412d; --warn-soft: #fbe5e0; --ok: #2f7a3e; --ok-soft: #dff1e2; --info: #2b63c4; --info-soft: #dde8fb;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.6; margin: 0; }
+  a { color: var(--accent); }
+  code { font-family: var(--font-mono); font-size: 0.88em; background: var(--surface-2); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding-block: 32px 64px; padding-inline: 20px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; }
+  @media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); } .toc { position: static !important; } }
+  .toc { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; font-size: 14px; padding-top: 8px; }
+  .toc .label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); font-weight: 600; margin-bottom: 8px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .toc a { color: var(--fg); text-decoration: none; display: block; padding: 3px 0 3px 10px; border-left: 2px solid var(--line); }
+  .toc a:hover { border-left-color: var(--accent); color: var(--accent); }
+
+  main { min-width: 0; }
+  header.hero { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 36px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-size: clamp(28px, 4vw, 38px); line-height: 1.15; margin: 6px 0 12px; text-wrap: balance; font-weight: 700; }
+  .lede { font-size: 18px; color: var(--fg-muted); max-width: 66ch; margin: 0; }
+
+  section { margin-bottom: 52px; }
+  h2 { font-size: 24px; margin: 0 0 14px; padding-top: 8px; scroll-margin-top: 16px; text-wrap: balance; }
+  h3 { font-size: 17px; margin: 26px 0 8px; }
+  p, li { max-width: 72ch; }
+  ul, ol { padding-left: 22px; }
+  li { margin-bottom: 5px; }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.measure { border-color: var(--measure); background: var(--measure-soft); }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 8px; }
+  .callout strong:first-child { display: block; margin-bottom: 4px; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { background: var(--surface-2); font-weight: 600; font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  td.yes { color: var(--ok); font-weight: 600; white-space: nowrap; }
+  td.no { color: var(--warn); font-weight: 600; white-space: nowrap; }
+  td code { white-space: nowrap; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin: 14px 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+  .card h4 { margin: 0 0 6px; font-size: 15px; }
+  .card p { margin: 0; font-size: 14.5px; color: var(--fg-muted); }
+
+  pre { font-family: var(--font-mono); font-size: 13px; line-height: 1.55; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: var(--fg-muted); }
+  pre .k { color: var(--accent); }
+  pre .m { color: var(--measure); }
+  .figcap { font-size: 13.5px; color: var(--fg-muted); margin: -4px 0 14px; }
+
+  /* Pipelines: an ordered sequence, so the step numbers carry meaning. */
+  .pipeline { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 10px; counter-reset: step; }
+  .pipeline > li { counter-increment: step; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; max-width: none; margin: 0; }
+  .pipeline > li::before { content: counter(step); font-family: var(--font-mono); font-weight: 600; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+  .pipeline h4 { margin: 3px 0 4px; font-size: 15.5px; }
+  .pipeline p { margin: 0; font-size: 14.5px; }
+  .pipeline .files { margin-top: 6px; font-size: 13px; color: var(--fg-muted); }
+
+  .diagram { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 10px; margin: 16px 0 6px; }
+  .diagram svg { display: block; min-width: 680px; width: 100%; height: auto; }
+  .diagram text { font-family: var(--font-body); }
+
+  details { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 10px 14px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p:last-child { margin-bottom: 0; }
+  dl.gloss { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 8px 16px; margin: 12px 0; }
+  dl.gloss dt { font-weight: 600; }
+  dl.gloss dd { margin: 0; color: var(--fg-muted); max-width: 70ch; }
+  @media (max-width: 560px) { dl.gloss { grid-template-columns: minmax(0, 1fr); } dl.gloss dd { margin-bottom: 8px; } }
+  footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 16px; font-size: 13.5px; color: var(--fg-muted); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="toc" aria-label="Contents">
+    <div class="label">Contents</div>
+    <ol>
+      <li><a href="#short">1. The short version</a></li>
+      <li><a href="#pbip">2. Power BI as text files</a></li>
+      <li><a href="#git">3. Git in six ideas</a></li>
+      <li><a href="#local">4. Local copy vs GitHub</a></li>
+      <li><a href="#reading">5. How history is read</a></li>
+      <li><a href="#edits">6. Changes tab pipeline</a></li>
+      <li><a href="#compare">7. Compare tab pipeline</a></li>
+      <li><a href="#model">8. Model diagram by commit</a></li>
+      <li><a href="#example">9. A worked example</a></li>
+      <li><a href="#files">10. File map</a></li>
+      <li><a href="#limits">11. Limits and tips</a></li>
+      <li><a href="#glossary">12. Glossary</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">How it works · Git history</div>
+      <h1>Commit Comparison Guide</h1>
+      <p class="lede">How PBIP Lineage Explorer reads a project's git history and works out what changed between versions of a Power BI report: which files it opens, the logic behind each tab, and exactly which version of your project it compares.</p>
+    </header>
+
+    <section id="short">
+      <h2>1. The short version</h2>
+      <p>A PBIP project saves a Power BI report and its semantic model as ordinary text files. Git keeps a full copy of those files every time someone commits. The app reads those saved copies straight from the project's hidden <code>.git</code> folder, compares one version with the one before it, and translates the file differences back into Power BI terms: <em>this measure's DAX changed</em>, <em>this relationship was made inactive</em>, <em>this visual lost a filter</em>.</p>
+      <div class="grid">
+        <div class="card"><h4>Changes tab</h4><p>Looks only at the files each commit touched. Fast, and shows the raw before/after text of every changed file.</p></div>
+        <div class="card"><h4>Compare tab</h4><p>Rebuilds the whole project at each commit and compares it with the commit's parent. Sees deleted tables, page names, and anything still using something that was deleted.</p></div>
+        <div class="card"><h4>Model tab, “Changes by commit”</h4><p>Draws the semantic model before and after a commit, with new, deleted and edited tables and relationships marked.</p></div>
+      </div>
+      <div class="callout measure">
+        <strong>Does it compare against GitHub or against my computer?</strong>
+        <p>Against <strong>your computer's copy of the git history</strong>, starting from the commit you currently have checked out. The app never contacts GitHub. Commits you made locally but haven't pushed <em>are</em> included. Commits on GitHub that you haven't pulled are <em>not</em>. Edits you saved but haven't committed don't appear in the commit comparisons at all. They do appear in the lineage views and the Model tab's “Current model”, which read the files in your folder. <a href="#local">Section 4</a> covers every case.</p>
+      </div>
+    </section>
+
+    <section id="pbip">
+      <h2>2. Power BI as text files</h2>
+      <p>When a report is saved as a <strong>Power BI Project (.pbip)</strong> instead of a single .pbix file, Power BI Desktop writes a folder of small text files. Two folders matter:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Path inside the project</th><th>What it holds</th><th>Format</th></tr></thead>
+        <tbody>
+          <tr><td><code>Sales.SemanticModel/definition/tables/Sales.tmdl</code></td><td>One table: its columns (data type, source column, formula), its measures (DAX, format string, display folder), and its partitions (Power Query source and storage mode).</td><td>TMDL</td></tr>
+          <tr><td><code>…/definition/relationships.tmdl</code></td><td>Every relationship: from and to columns, active or not, cross-filter direction, cardinality, security filter direction.</td><td>TMDL</td></tr>
+          <tr><td><code>…/definition/roles/*.tmdl</code></td><td>Row-level security roles and their DAX filters.</td><td>TMDL</td></tr>
+          <tr><td><code>…/definition/expressions.tmdl</code></td><td>Shared Power Query queries and parameters.</td><td>TMDL</td></tr>
+          <tr><td><code>Sales.Report/definition.pbir</code></td><td>Which semantic model this report is bound to (for example <code>../Sales.SemanticModel</code>).</td><td>JSON</td></tr>
+          <tr><td><code>…/definition/report.json</code></td><td>Report-level settings and filters that apply to all pages, plus the theme.</td><td>JSON</td></tr>
+          <tr><td><code>…/definition/pages/pages.json</code></td><td>Page order and which page opens first.</td><td>JSON</td></tr>
+          <tr><td><code>…/pages/<em>pageId</em>/page.json</code></td><td>One page: its display name, whether it's hidden, and its page-level filters.</td><td>JSON</td></tr>
+          <tr><td><code>…/pages/<em>pageId</em>/visuals/<em>visualId</em>/visual.json</code></td><td>One visual: its type, the fields in each well, its title, visual-level filters, and a slicer's saved selection.</td><td>JSON</td></tr>
+          <tr><td><code>…/definition/bookmarks/<em>id</em>.bookmark.json</code></td><td>One bookmark: target page, what's hidden or shown, the filter and slicer state it captured, and its Data / Display / Current page options.</td><td>JSON</td></tr>
+          <tr><td><code>*/.pbi/</code> (for example <code>cache.abf</code>, <code>localSettings.json</code>)</td><td>Local caches and per-user settings. Not part of the report's design, so the app skips them.</td><td>mixed</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>IDs and display names</h3>
+      <p>Pages, visuals and bookmarks are stored under an <strong>ID</strong>, a random-looking name such as <code>85f22ff15397e9ee0d93</code> that Power BI assigns once and never changes. The name you see in Power BI (“Sales Overview”, a visual's title) is stored <em>inside</em> the file. This matters for comparisons:</p>
+      <ul>
+        <li>Renaming a page changes a value inside <code>page.json</code>. Its folder ID stays the same, so the app reports a <strong>rename</strong>, not a deletion plus a new page.</li>
+        <li>Two visuals with the same title are still told apart by their IDs.</li>
+        <li>Copying and pasting a visual gives the copy a <strong>new</strong> ID. The app can only infer that it's a copy, from a matching type, fields and title, so it marks it “Possible copy”.</li>
+        <li>A report folder copied to make a second report keeps the same page and visual IDs. That's why the app always compares each report folder separately.</li>
+      </ul>
+
+      <h3>What a field reference looks like</h3>
+      <p>A visual doesn't store “Total Sales”. It stores which table and which field, and for columns, how they're aggregated:</p>
+<pre><span class="c">// inside visual.json: a column in the Values well, summed</span>
+{ <span class="k">"Aggregation"</span>: { <span class="k">"Function"</span>: 0,
+    <span class="k">"Expression"</span>: { <span class="k">"Column"</span>: { <span class="k">"Expression"</span>: { <span class="k">"SourceRef"</span>: { <span class="k">"Entity"</span>: <span class="m">"area_dashboard_crv_view"</span> } },
+                              <span class="k">"Property"</span>: <span class="m">"dta_area"</span> } } } }</pre>
+      <p class="figcap">The app reads this as “Sum of area_dashboard_crv_view[dta_area]”. <code>Entity</code> is the table and <code>Property</code> the column or measure.</p>
+<pre><span class="c">// inside relationships.tmdl</span>
+<span class="k">relationship</span> 3f1c…
+	<span class="k">fromColumn</span>: area_dashboard_pemd.space_created_timestamp
+	<span class="k">toColumn</span>: date_dim.full_date
+	<span class="k">isActive</span>: false</pre>
+      <p class="figcap">Anything left out uses Power BI's default: active, single direction, many-to-one. The app fills in the defaults before comparing, so leaving a default out and writing it explicitly count as the same thing.</p>
+    </section>
+
+    <section id="git">
+      <h2>3. Git in six ideas</h2>
+      <div class="grid">
+        <div class="card"><h4>A commit is a full snapshot</h4><p>Each commit records every file in the project as it was at that moment, plus a message, an author and a date. It is not just a list of edits.</p></div>
+        <div class="card"><h4>Every commit has a parent</h4><p>The parent is the commit it was built on. Comparing a commit with its parent shows what that commit changed. A merge commit has two parents.</p></div>
+        <div class="card"><h4>Everything has an ID</h4><p>Commits, folders and file contents are each identified by a hash, such as <code>83b05b8…</code>. Identical file contents get identical IDs, so “did this file change?” is a quick ID comparison.</p></div>
+        <div class="card"><h4>A branch is a pointer</h4><p>A branch name (<code>main</code>, <code>Dev_1.0</code>) points to its latest commit. <strong>HEAD</strong> is the commit you currently have checked out.</p></div>
+        <div class="card"><h4>Your clone is a full copy</h4><p>The hidden <code>.git</code> folder in your project holds every commit you have downloaded. It's what the app reads.</p></div>
+        <div class="card"><h4>Fetch, pull and push sync it</h4><p><strong>Fetch</strong> downloads new commits from GitHub. <strong>Pull</strong> fetches and moves your branch forward. <strong>Push</strong> uploads your commits. Nothing syncs on its own.</p></div>
+      </div>
+    </section>
+
+    <section id="local">
+      <h2>4. Your local copy vs what's on GitHub</h2>
+      <p>There are three different versions of a project in play, and each feature of the app reads a specific one:</p>
+
+      <div class="diagram" role="img" aria-label="Diagram: GitHub has commits A to D. Your clone has A, B, C and your own unpushed commit E, which is HEAD. Your folder has saved but uncommitted edits on top. The commit tabs read from HEAD back through history; the lineage views and Current model read the folder.">
+        <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg">
+          <!-- Row labels -->
+          <text x="14" y="52" font-size="13" font-weight="600" fill="var(--fg)">On GitHub</text>
+          <text x="14" y="70" font-size="11.5" fill="var(--fg-muted)">origin/main</text>
+          <text x="14" y="142" font-size="13" font-weight="600" fill="var(--fg)">Your clone</text>
+          <text x="14" y="160" font-size="11.5" fill="var(--fg-muted)">the .git folder</text>
+          <text x="14" y="242" font-size="13" font-weight="600" fill="var(--fg)">Your folder</text>
+          <text x="14" y="260" font-size="11.5" fill="var(--fg-muted)">files on disk</text>
+
+          <!-- GitHub row: A B C D -->
+          <line x1="150" y1="58" x2="420" y2="58" stroke="var(--line)" stroke-width="3"/>
+          <g font-size="12" font-weight="600" text-anchor="middle">
+            <circle cx="150" cy="58" r="14" fill="var(--surface-2)" stroke="var(--fg-muted)" stroke-width="2"/><text x="150" y="62" fill="var(--fg)">A</text>
+            <circle cx="240" cy="58" r="14" fill="var(--surface-2)" stroke="var(--fg-muted)" stroke-width="2"/><text x="240" y="62" fill="var(--fg)">B</text>
+            <circle cx="330" cy="58" r="14" fill="var(--surface-2)" stroke="var(--fg-muted)" stroke-width="2"/><text x="330" y="62" fill="var(--fg)">C</text>
+            <circle cx="420" cy="58" r="14" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="2" stroke-dasharray="4 3"/><text x="420" y="62" fill="var(--warn)">D</text>
+          </g>
+          <text x="446" y="54" font-size="12" fill="var(--warn)">D: a teammate's commit you haven't pulled.</text>
+          <text x="446" y="70" font-size="12" fill="var(--warn)">Not in your clone, so not shown anywhere.</text>
+
+          <!-- Clone row: A B C E(HEAD) -->
+          <line x1="150" y1="148" x2="420" y2="148" stroke="var(--accent)" stroke-width="3"/>
+          <g font-size="12" font-weight="600" text-anchor="middle">
+            <circle cx="150" cy="148" r="14" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/><text x="150" y="152" fill="var(--fg)">A</text>
+            <circle cx="240" cy="148" r="14" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/><text x="240" y="152" fill="var(--fg)">B</text>
+            <circle cx="330" cy="148" r="14" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/><text x="330" y="152" fill="var(--fg)">C</text>
+            <circle cx="420" cy="148" r="15" fill="var(--ok-soft)" stroke="var(--ok)" stroke-width="2.5"/><text x="420" y="152" fill="var(--ok)">E</text>
+          </g>
+          <rect x="398" y="104" width="44" height="18" rx="4" fill="var(--ok)"/>
+          <text x="420" y="117" font-size="11" font-weight="700" text-anchor="middle" fill="var(--bg)">HEAD</text>
+          <text x="446" y="144" font-size="12" fill="var(--fg)">E: your commit, not pushed yet. Included.</text>
+          <text x="446" y="160" font-size="12" fill="var(--fg-muted)">Changes and Compare start at HEAD and go back</text>
+          <text x="446" y="176" font-size="12" fill="var(--fg-muted)">through up to 10 commits: E, C, B, A…</text>
+          <path d="M405 168 C 330 190, 230 190, 165 168" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="5 4"/>
+          <path d="M165 168 l9 -1 l-5 7 z" fill="var(--accent)"/>
+
+          <!-- Working copy row -->
+          <rect x="370" y="218" width="100" height="44" rx="8" fill="var(--measure-soft)" stroke="var(--measure)" stroke-width="2" stroke-dasharray="5 4"/>
+          <text x="420" y="237" font-size="12" font-weight="600" text-anchor="middle" fill="var(--measure)">Saved edits</text>
+          <text x="420" y="253" font-size="11" text-anchor="middle" fill="var(--measure)">not committed</text>
+          <line x1="420" y1="164" x2="420" y2="216" stroke="var(--measure)" stroke-width="1.6" stroke-dasharray="3 3"/>
+          <text x="486" y="236" font-size="12" fill="var(--fg)">Read by the lineage views and Model “Current model”.</text>
+          <text x="486" y="252" font-size="12" fill="var(--fg-muted)">Not part of any commit comparison.</text>
+        </svg>
+      </div>
+      <p class="figcap">A, B and C exist in both places. The commit tabs only ever see what is in your clone.</p>
+
+      <div class="table-wrap"><table>
+        <thead><tr><th>Situation</th><th>Lineage views and Model “Current model”</th><th>Changes, Compare and Model “Changes by commit”</th></tr></thead>
+        <tbody>
+          <tr><td>You edited and <strong>saved</strong> in Power BI Desktop but didn't commit</td><td class="yes">Shown</td><td class="no">Not shown</td></tr>
+          <tr><td>You have unsaved edits open in Power BI Desktop</td><td class="no">Not shown</td><td class="no">Not shown</td></tr>
+          <tr><td>You <strong>committed</strong> but didn't push</td><td class="yes">Shown</td><td class="yes">Shown (it's in your clone)</td></tr>
+          <tr><td>A teammate pushed to GitHub and you haven't pulled</td><td class="no">Not shown</td><td class="no">Not shown</td></tr>
+          <tr><td>You ran <code>git fetch</code> but not <code>git pull</code></td><td class="no">Not shown</td><td class="no">Not shown. The commits are downloaded, but your checked-out branch hasn't moved to them.</td></tr>
+          <tr><td>Commits on another branch (for example <code>origin/Dev/v2.1</code>)</td><td class="no">Not shown</td><td class="no">Not shown until you check that branch out or merge it into yours</td></tr>
+          <tr><td>You check out a different branch or an older commit</td><td>Shows that version's files after you re-open the folder</td><td>Starts from that commit after you re-open the folder</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="callout">
+        <strong>To review exactly what is on GitHub</strong>
+        <p>Pull first (<code>git pull</code>, or Sync in GitHub Desktop or VS Code), make sure the branch you want is checked out, then open the folder in the app. If you have uncommitted work, commit or stash it so the files on disk match the commit being reviewed.</p>
+        <p>To review a branch that isn't yours yet, check it out (<code>git checkout Dev/v2.1</code>) and open the folder again.</p>
+      </div>
+
+      <div class="callout warn">
+        <strong>One subtle mismatch</strong>
+        <p>On the Changes tab, “impact” for an edited measure (which visuals show it) is traced through the project <em>as it is on disk now</em>, not as it was at that commit. On the Compare tab, dependency effects use the project <em>as it was right after that commit</em>. For an old commit, the two can name different visuals.</p>
+      </div>
+    </section>
+
+    <section id="reading">
+      <h2>5. How the app reads git history</h2>
+      <p>Everything runs in your browser. The app doesn't call GitHub, doesn't run the <code>git</code> program, and doesn't change anything in the repository.</p>
+      <ol class="pipeline">
+        <li><div><h4>You pick the project folder</h4><p>Chrome and Edge let a web page read a folder you choose (the File System Access API). Pick the folder that <strong>contains the <code>.git</code> folder</strong>, the repository root. If you pick a sub-folder, the lineage views still work but the app reports “This folder is not a git repository”.</p><div class="files">src/parser/pbipReader.js · src/parser/gitFs.js (<code>hasGitDirectory</code>)</div></div></li>
+        <li><div><h4>A read-only adapter exposes <code>.git</code></h4><p>A small adapter makes the chosen folder look like a normal file system to a git library. It only implements reading; there is nothing in it that writes.</p><div class="files">src/parser/gitFs.js (<code>createGitFs</code>)</div></div></li>
+        <li><div><h4>isomorphic-git reads the commits</h4><p><a href="https://isomorphic-git.org/">isomorphic-git</a> is an open-source JavaScript implementation of git. It reads the commit list, folder listings and file contents from <code>.git</code>, including git's compressed “pack” files. The app keeps one shared cache so packs are unpacked only once.</p><div class="files">npm package <code>isomorphic-git</code> · <code>buffer</code> (a small helper it needs in the browser)</div></div></li>
+        <li><div><h4>Start at HEAD, newest first</h4><p>Both scans ask for the history of whatever is checked out (HEAD), newest first. The Changes tab reads 11 commits to make 10 pairs. The Compare tab reads 10 commits and compares each with its own parent.</p><div class="files">src/parser/gitScanner.js (<code>scanGitHistory</code>) · src/parser/snapshotScanner.js (<code>scanVersionHistory</code>)</div></div></li>
+        <li><div><h4>Only PBIP files</h4><p>Only <code>.tmdl</code>, <code>.json</code> and <code>.pbir</code> files are read. <code>.pbi</code> caches and <code>node_modules</code> folders are skipped.</p></div></li>
+      </ol>
+      <p>The Changes scan starts on its own after a project loads, and its total appears on the Changes button. The Compare scan reads much more (every file of every version), so it starts the first time you open Compare or the Model tab's “Changes by commit”. On a repository with four reports and about 2,000 changed files in some commits, the Changes scan took about 11 seconds and the Compare scan about 15 to 30 seconds.</p>
+    </section>
+
+    <section id="edits">
+      <h2>6. Changes tab (“Commit Edits”) pipeline</h2>
+      <p>This tab answers: <em>which PBIP files did each commit touch, and what does that mean in Power BI terms?</em> It compares each commit with the next older commit in the list.</p>
+      <ol class="pipeline">
+        <li><div><h4>Find the changed files</h4><p>The two commits' folder trees are compared from the top down. A folder whose ID is the same in both commits is identical, so it is skipped without being opened. That makes a commit that changed one visual quick, even in a large repository. Inside changed folders, a file counts as changed when its content ID differs.</p><div class="files">src/parser/gitScanner.js (<code>getChangedFilesBetween</code>)</div></div></li>
+        <li><div><h4>Read before and after text</h4><p>Each changed file's old and new contents are read by ID. A file that only exists on one side is new or deleted.</p><div class="files">src/parser/gitScanner.js (<code>readBlobText</code>)</div></div></li>
+        <li><div><h4>Split by report and model</h4><p>Files are grouped by their <code>X.Report</code> or <code>X.SemanticModel</code> folder and each group is compared on its own, so two reports that share IDs never get mixed up.</p><div class="files">packages/core/src/diff/changeDetector.js (<code>detectChanges</code>, <code>pairByProject</code>)</div></div></li>
+        <li><div><h4>Run one detector per kind of change</h4><p>Each detector parses its files and compares them field by field:</p>
+          <ul>
+            <li><strong>Pages:</strong> pages added or removed, default page, page filters. <span class="files">pageDiff.js</span></li>
+            <li><strong>Report filters</strong> on all pages. <span class="files">filterDiff.js</span></li>
+            <li><strong>Visuals:</strong> added or removed, hidden or shown, fields, visual filters, bookmark buttons. <span class="files">visualDiff.js</span></li>
+            <li><strong>Bookmarks.</strong> <span class="files">bookmarkDiff.js</span></li>
+            <li><strong>Measures, calculation items and columns.</strong> <span class="files">measureDiff.js</span></li>
+            <li><strong>Relationships.</strong> <span class="files">relationshipDiff.js</span></li>
+            <li><strong>Power Query sources, shared expressions and parameters.</strong> <span class="files">sourceDiff.js</span></li>
+          </ul>
+          <div class="files">packages/core/src/diff/ · change types in changeTypes.js</div></div></li>
+        <li><div><h4>Trace the impact of measure changes</h4><p>For an edited, added or removed measure or calculation item, the app walks the current lineage graph to list the visuals that show it, including through field parameters and calculation groups.</p><div class="files">packages/core/src/diff/impactResolver.js</div></div></li>
+        <li><div><h4>Group by topic and show the text</h4><p>Changes are grouped into topics for the list, and each changed file gets a side-by-side line diff with unchanged stretches collapsed.</p><div class="files">packages/core/src/diff/changeTopics.js · textDiff.js · src/ui/changeHistoryView.js</div></div></li>
+      </ol>
+      <div class="callout measure">
+        <strong>Why this tab sometimes can't say more</strong>
+        <p>It only sees the files a commit touched. If a commit deletes a table, it can't tell you that a visual (in a file the commit didn't touch) still uses that table. For that, and for page names on visuals whose page file didn't change, use the Compare tab.</p>
+      </div>
+    </section>
+
+    <section id="compare">
+      <h2>7. Compare tab (Version Compare) pipeline</h2>
+      <p>This tab answers: <em>what does the project look like after this commit, compared with right before it?</em></p>
+      <ol class="pipeline">
+        <li><div><h4>Pick each commit's real parent</h4><p>Each of the last 10 commits is compared with its first parent, even if that parent is further back in the list. A merge commit is compared with the branch it was merged into, so its changes are everything the merge brought in. The very first commit in a repository is compared with nothing, so everything in it is listed as new.</p><div class="files">src/parser/snapshotScanner.js (<code>scanVersionHistory</code>)</div></div></li>
+        <li><div><h4>Rebuild a full snapshot of both versions</h4><p>Every PBIP file in the commit is listed and read. Folder listings and file contents are cached by ID, and adjacent commits share almost all of them, so each is read only once across the whole scan.</p><div class="files">src/parser/snapshotScanner.js (<code>listPbipFiles</code>)</div></div></li>
+        <li><div><h4>Turn files into Power BI objects</h4><p>Files are grouped by <code>X.SemanticModel</code> and <code>X.Report</code> folder. For each model: tables, columns, measures, calculation items, partitions and sources, relationships, RLS roles and shared expressions. For each report: the bound model, theme, default page, report, page and visual filters, pages, visuals (type, title, fields, slicer selection) and bookmarks.</p><div class="files">packages/core/src/compare/snapshot.js (<code>buildSnapshot</code>) · reuses parser/tmdlParser.js</div></div></li>
+        <li><div><h4>Compare object by object</h4><p>Each object is matched with its counterpart by its identity, then property by property. The result is one record per difference, placed in <strong>Modified / Commit Edits</strong> (edited, renamed or deleted) or <strong>Additions</strong> (new).</p><div class="files">packages/core/src/compare/compareSnapshots.js (<code>compareSnapshots</code>)</div></div></li>
+        <li><div><h4>Work out dependency effects</h4><p>For an edited, deleted or renamed measure, column or table, the app indexes every DAX reference and every visual and filter in the <em>after</em> version, then follows the chain: measures that use it, measures that use those, calculated columns, field parameters, visuals, filters, RLS roles and relationships. Deleting or renaming something still in use <strong>breaks</strong> those things. Editing a formula only <strong>changes their values</strong>.</p><div class="files">packages/core/src/compare/dependencyImpact.js · DAX references from parser/daxParser.js</div></div></li>
+        <li><div><h4>Explain bookmarks</h4><p>For each bookmark, its captured state is compared with the target page's normal state: which objects it hides or shows, and which filters and slicers it changes. Settings that cancel parts of it are noted (for example Data not captured).</p><div class="files">packages/core/src/compare/bookmarkEffect.js</div></div></li>
+        <li><div><h4>Display</h4><p>Records are grouped by type, security-related and breaking changes are listed first, and they can be searched and filtered.</p><div class="files">src/ui/versionCompareView.js</div></div></li>
+      </ol>
+
+      <h3>How objects are matched between versions</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Object</th><th>Matched by</th><th>Special handling</th></tr></thead>
+        <tbody>
+          <tr><td>Report, semantic model</td><td>Folder path</td><td>A report's bound model comes from <code>definition.pbir</code>.</td></tr>
+          <tr><td>Table, column</td><td>Name</td><td>A whole table that's new or deleted is one record that lists its columns and measures.</td></tr>
+          <tr><td>Measure</td><td>Name</td><td>A deleted and a new measure with identical DAX are one <strong>rename</strong>. A measure moved to another table is not counted as breaking anything, because DAX finds measures by name.</td></tr>
+          <tr><td>Relationship</td><td>Its internal name</td><td>If it was deleted and recreated with a new name but the same columns, it's matched by its columns.</td></tr>
+          <tr><td>Page, visual, bookmark</td><td>ID (folder or file name)</td><td>A visual's ID is combined with its page's ID. Titles are never used to match, so same-named visuals stay separate.</td></tr>
+          <tr><td>Filter</td><td>Its internal name</td><td>A filter removed and re-added on the same field gets a new name, so it's matched by field and shown as one edit.</td></tr>
+          <tr><td>RLS role</td><td>Name</td><td>Always marked as a security change.</td></tr>
+        </tbody>
+      </table></div>
+      <p>Only meaningful properties are compared. Bookkeeping that Power BI rewrites on every save (<code>lineageTag</code>, annotations, <code>changedProperty</code>) is ignored, as are visual formatting details other than the title text and hidden state. Whitespace differences in DAX and Power Query are ignored.</p>
+    </section>
+
+    <section id="model">
+      <h2>8. Model diagram, “Changes by commit”</h2>
+      <p>The Model tab reuses the Compare scan. For the selected commit and semantic model it takes the before and after versions of the model and builds a combined diagram:</p>
+      <ul>
+        <li>Tables and relationships in both versions are matched (relationships by name, then by columns), then tagged <strong>new</strong>, <strong>deleted</strong>, <strong>edited</strong> or <strong>unchanged</strong>.</li>
+        <li>Edited tables list their column changes (added, deleted, data type changed, formula edited) and a count of measure changes. Edited relationships list exactly what changed, such as “Active: Yes → No”.</li>
+        <li>Power BI's automatic date tables (<code>LocalDateTable_…</code>, one per date column when Auto date/time is on) are hidden by default, and their changes aren't counted.</li>
+        <li>The layout places each fact table at the centre of its dimension tables and keeps the same layout every time it's drawn.</li>
+      </ul>
+      <p class="files" style="font-size:13px;color:var(--fg-muted)">packages/core/src/compare/modelDiagram.js (<code>diffModelDiagram</code>, <code>layoutModelDiagram</code>) · src/ui/modelDiagramView.js</p>
+    </section>
+
+    <section id="example">
+      <h2>9. A worked example</h2>
+      <p>From the <code>pbiws_area_dashboards</code> repository: commit <code>83b05b8</code>, “Merge pull request #22 from MFD-Eng/dev/v2.1”, the current state of its <code>main</code> branch.</p>
+      <ol class="pipeline">
+        <li><div><h4>Find the parent</h4><p>It's a merge commit, so it's compared with its first parent, <code>2ade248</code>, the state of <code>main</code> before the merge.</p></div></li>
+        <li><div><h4>Rebuild both versions</h4><p>All PBIP files of both commits are read: four reports and two semantic models.</p></div></li>
+        <li><div><h4>Compare the model</h4><p>In <code>area_dashboard_crv_view.tmdl</code>, the column <code>dta_area</code> exists before and is gone after, which produces a “Deleted column” record.</p></div></li>
+        <li><div><h4>Check what still uses it</h4><p>The after version's visuals are searched for <code>Entity: area_dashboard_crv_view</code> with <code>Property: dta_area</code>. One is found: the “Square Meters by Area” column chart (<code>1991a1c</code>) on the CRV page of Global Dashboard. That report's <code>definition.pbir</code> points to <code>../Area Dashboard.SemanticModel</code>, so it is bound to the same model.</p></div></li>
+        <li><div><h4>Report it</h4><p>The record shows <strong>Breaks 1 visual</strong> and the card is flagged “Still referenced”. The commit's “Breaking changes” count goes up by one.</p></div></li>
+      </ol>
+      <div class="callout ok"><p>This was confirmed independently with <code>git grep</code> on that commit: that chart is the only visual referencing the deleted column.</p></div>
+    </section>
+
+    <section id="files">
+      <h2>10. File map</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File</th><th>Used by</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>src/parser/gitFs.js</code></td><td>All commit features</td><td>Read-only bridge between the picked folder and the git library; checks that <code>.git</code> exists.</td></tr>
+          <tr><td><code>src/parser/gitScanner.js</code></td><td>Changes</td><td>Lists commits, finds changed PBIP files per pair, reads before/after text, runs change detection.</td></tr>
+          <tr><td><code>src/parser/snapshotScanner.js</code></td><td>Compare, Model</td><td>Rebuilds a full snapshot per commit (cached by ID) and compares each commit with its parent.</td></tr>
+          <tr><td><code>packages/core/src/diff/changeDetector.js</code></td><td>Changes</td><td>Splits files by report and model folder and runs the detectors.</td></tr>
+          <tr><td><code>packages/core/src/diff/*Diff.js</code></td><td>Changes</td><td>One detector each for pages, filters, visuals, bookmarks, measures and columns, relationships, sources.</td></tr>
+          <tr><td><code>packages/core/src/diff/impactResolver.js</code></td><td>Changes</td><td>Visuals affected by a measure change, through the lineage graph.</td></tr>
+          <tr><td><code>packages/core/src/diff/changeTopics.js</code>, <code>textDiff.js</code></td><td>Changes</td><td>Topic grouping and the side-by-side line diff.</td></tr>
+          <tr><td><code>packages/core/src/compare/snapshot.js</code></td><td>Compare, Model</td><td>Turns a set of files into models and reports made of Power BI objects.</td></tr>
+          <tr><td><code>packages/core/src/compare/compareSnapshots.js</code></td><td>Compare</td><td>Matches objects between two snapshots and produces the Modified and Additions records.</td></tr>
+          <tr><td><code>packages/core/src/compare/dependencyImpact.js</code></td><td>Compare</td><td>Dependency effects: what still uses a changed or deleted object, and whether it breaks.</td></tr>
+          <tr><td><code>packages/core/src/compare/bookmarkEffect.js</code></td><td>Compare</td><td>What a bookmark changes compared with the page's normal state.</td></tr>
+          <tr><td><code>packages/core/src/compare/modelDiagram.js</code></td><td>Model</td><td>Before/after diagram data and the table layout.</td></tr>
+          <tr><td><code>packages/core/src/parser/tmdlParser.js</code>, <code>daxParser.js</code>, <code>projectStructure.js</code></td><td>Everything</td><td>Shared parsers for TMDL, DAX references, and sorting files by kind.</td></tr>
+          <tr><td><code>src/ui/changeHistoryView.js</code>, <code>versionCompareView.js</code>, <code>modelDiagramView.js</code></td><td>Each tab</td><td>What you see on screen.</td></tr>
+          <tr><td><code>src/main.js</code></td><td>Everything</td><td>Starts the scans (<code>startGitScan</code>, <code>scanGitChanges</code>, <code>startVersionScan</code>) and passes results to the tabs.</td></tr>
+        </tbody>
+      </table></div>
+      <p>Everything under <code>packages/core</code> is plain JavaScript that also runs outside the browser, which is how it's tested (<code>npm run test</code>) and how a reviewer script could reuse the same comparison code.</p>
+    </section>
+
+    <section id="limits">
+      <h2>11. Limits and tips</h2>
+      <ul>
+        <li><strong>Last 10 commits only.</strong> To review older history, check out an older commit and open the folder again.</li>
+        <li><strong>Merge commits differ between tabs.</strong> Compare uses the merge's first parent. The Changes tab compares neighbours in the commit list, which for a merge can be a commit from the other branch. The two tabs can therefore show different results for the same merge; Compare's is the one to trust.</li>
+        <li><strong>Line endings.</strong> If a commit only converts line endings (Windows vs Mac/Linux), the Changes tab may count those files as changed, but no Power BI changes are listed for them. Compare reads the content, so it ignores them.</li>
+        <li><strong>Shallow or partial clones.</strong> If the repository was cloned with limited history, older commits or parents may be missing, and those commits show as “could not be compared”.</li>
+        <li><strong>Live-connected reports.</strong> A report bound to a published model (not a model folder in the repo) has no model to compare against, so dependency effects skip it.</li>
+        <li><strong>DAX is read, not run.</strong> Dependency effects find references in the formula text. They don't evaluate DAX, so a reference built at run time (rare) isn't seen.</li>
+        <li><strong>Browser.</strong> Chrome or Edge is required for folder access. The bundled sample project has no git history.</li>
+      </ul>
+    </section>
+
+    <section id="glossary">
+      <h2>12. Glossary</h2>
+      <dl class="gloss">
+        <dt>PBIP</dt><dd>Power BI Project: a report and model saved as a folder of text files instead of one .pbix file.</dd>
+        <dt>TMDL</dt><dd>Tabular Model Definition Language, the text format for the semantic model (tables, measures, relationships, roles).</dd>
+        <dt>PBIR</dt><dd>The JSON format for the report (pages, visuals, bookmarks, filters).</dd>
+        <dt>Commit</dt><dd>A saved snapshot of the whole project in git, with a message, author and date.</dd>
+        <dt>Parent</dt><dd>The commit a commit was built on. Comparing with it shows what the commit changed.</dd>
+        <dt>Hash / ID</dt><dd>The unique code git gives each commit, folder and file content, such as <code>83b05b8</code> (shortened).</dd>
+        <dt>Branch</dt><dd>A named pointer to the latest commit on a line of work.</dd>
+        <dt>HEAD</dt><dd>The commit currently checked out in your folder. The commit scans start here.</dd>
+        <dt>Clone</dt><dd>Your local copy of a repository, including its <code>.git</code> folder.</dd>
+        <dt>Working copy</dt><dd>The files currently in your folder, including saved edits that aren't committed yet.</dd>
+        <dt>Fetch / pull / push</dt><dd>Download new commits / download and move your branch to them / upload your commits.</dd>
+        <dt>Merge commit</dt><dd>A commit that joins two branches; it has two parents.</dd>
+        <dt>Snapshot</dt><dd>In this app, a project fully rebuilt from one commit's files.</dd>
+        <dt>Dependency effects</dt><dd>Everything that still uses a changed or deleted object, and whether the change breaks it or only changes its values.</dd>
+      </dl>
+    </section>
+
+    <footer>PBIP Lineage Explorer (Abearstudios build), based on the open-source PBIP Lineage Explorer by Jihwan Kim. Companion to the Technical Guide and User Guide in this folder.</footer>
+  </main>
+</div>
+</body>
+</html>
