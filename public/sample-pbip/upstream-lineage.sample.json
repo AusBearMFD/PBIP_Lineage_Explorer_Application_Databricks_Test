@@ -1,0 +1,314 @@
+{
+  "version": 1,
+  "generatedAt": "2026-11-06T15:00:00Z",
+  "generatedBy": "sample data (illustrative names, not a real system); details show what build_upstream.py collects",
+  "pbipCommit": null,
+  "anchors": {
+    "Customers": "dbx:sales_cat.gold.dim_customer",
+    "Products": "fabric:sales_lakehouse.dbo.products"
+  },
+  "nodes": [
+    {
+      "id": "sql:mydb.dbo.fact_sales",
+      "system": "sqlserver",
+      "kind": "table",
+      "lastUpdated": "2026-11-06T06:10:00Z"
+    },
+    {
+      "id": "dbx:sales_cat.gold.fact_sales",
+      "system": "databricks",
+      "kind": "table",
+      "lastUpdated": "2026-11-06T05:55:00Z",
+      "freshness": {
+        "status": "ok",
+        "lastRun": "2026-11-06T05:40:00Z",
+        "job": "sales_export"
+      },
+      "details": {
+        "columns": [
+          "order_id",
+          "order_date",
+          "customer_id",
+          "product_id",
+          "quantity",
+          "net_amount"
+        ],
+        "writer": {
+          "jobId": "sales_pipeline",
+          "jobName": "sales_pipeline",
+          "runAs": "svc-sales-etl",
+          "operation": "MERGE",
+          "visible": true,
+          "tasks": [
+            {
+              "key": "merge_fact_sales",
+              "type": "notebook",
+              "target": "/Repos/sales/merge_fact_sales"
+            }
+          ]
+        },
+        "schedule": {
+          "summary": "Scheduled: 0 30 5 * * ? (UTC)",
+          "cron": "0 30 5 * * ?",
+          "timezone": "UTC",
+          "source": "the job's schedule setting",
+          "observed": "Writes about once a day, usually around 05:40 UTC"
+        },
+        "runs": [
+          {
+            "time": "2026-11-06T05:40:00Z",
+            "status": "Success",
+            "operation": "MERGE",
+            "rows": 18233
+          },
+          {
+            "time": "2026-11-05T05:41:00Z",
+            "status": "Success",
+            "operation": "MERGE",
+            "rows": 17902
+          },
+          {
+            "time": "2026-11-04T05:39:00Z",
+            "status": "Success",
+            "operation": "MERGE",
+            "rows": 18511
+          }
+        ],
+        "runsSource": "the job's run history",
+        "sql": "MERGE INTO sales_cat.gold.fact_sales t\nUSING (\n  SELECT o.order_id, o.order_date, o.customer_id, o.product_id,\n         o.quantity, o.quantity * o.unit_price - o.discount AS net_amount\n  FROM sales_cat.silver.orders o\n  WHERE o.order_date >= date_sub(current_date(), 3)\n) s\nON t.order_id = s.order_id\nWHEN MATCHED THEN UPDATE SET *\nWHEN NOT MATCHED THEN INSERT *",
+        "sqlSource": "cells of /Repos/sales/merge_fact_sales that name fact_sales (task merge_fact_sales)",
+        "links": [
+          {
+            "label": "Open in Catalog Explorer",
+            "url": "https://example.cloud.databricks.com/explore/data/sales_cat/gold/fact_sales"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dbx:sales_cat.silver.orders",
+      "system": "databricks",
+      "kind": "table",
+      "lastUpdated": "2026-11-06T05:30:00Z"
+    },
+    {
+      "id": "sql:erp.dbo.order_lines",
+      "system": "sqlserver",
+      "kind": "table",
+      "terminal": "origin",
+      "note": "ERP order entry system"
+    },
+    {
+      "id": "file:pos_daily_drop.csv",
+      "system": "file",
+      "kind": "file"
+    },
+    {
+      "id": "dbx:sales_cat.gold.dim_customer",
+      "system": "databricks",
+      "kind": "view",
+      "details": {
+        "columns": [
+          "customer_id",
+          "customer_name",
+          "segment",
+          "region"
+        ],
+        "sql": "CREATE VIEW sales_cat.gold.dim_customer AS\nSELECT c.customer_id, c.name AS customer_name, c.segment, r.region_name AS region\nFROM sales_cat.silver.crm_customers c\nLEFT JOIN sales_cat.silver.regions r ON r.region_id = c.region_id",
+        "sqlSource": "view definition (Unity Catalog)",
+        "schedule": {
+          "summary": "A view runs its SQL each time it's read, so it's as current as the tables it reads.",
+          "source": "view"
+        }
+      }
+    },
+    {
+      "id": "pbi-df:CRM Customers",
+      "system": "dataflow",
+      "kind": "dataflow table",
+      "name": "CRM Customers",
+      "lastUpdated": "2026-11-06T04:05:00Z",
+      "freshness": {
+        "status": "ok",
+        "lastRun": "2026-11-06T04:05:00Z",
+        "job": "dataflow refresh"
+      },
+      "details": {
+        "mQuery": "let\n    Source = Json.Document(Web.Contents(\"https://crm.example.com/customers\")),\n    AsTable = Table.FromRecords(Source[value]),\n    Typed = Table.TransformColumnTypes(AsTable, {{\"id\", type text}, {\"created\", type datetime}}),\n    Active = Table.SelectRows(Typed, each [status] = \"active\"),\n    Merged = Table.NestedJoin(Active, {\"region_id\"}, Regions, {\"id\"}, \"Region\", JoinKind.LeftOuter),\n    Expanded = Table.ExpandTableColumn(Merged, \"Region\", {\"name\"}, {\"region_name\"}),\n    Segment = Table.AddColumn(Expanded, \"segment\", each if [annual_spend] > 100000 then \"Enterprise\" else \"SMB\", type text)\nin\n    Segment",
+        "dataflow": {
+          "name": "CRM Customers",
+          "id": "00000000-sample",
+          "workspace": "Sample workspace",
+          "modified": "2026-09-14T17:20:00Z"
+        },
+        "schedule": {
+          "summary": "Scheduled refresh about once a day, usually around 04:00 UTC",
+          "source": "observed from the dataflow's refresh history"
+        },
+        "runs": [
+          {
+            "time": "2026-11-06T04:00:00Z",
+            "status": "Success",
+            "trigger": "Scheduled"
+          },
+          {
+            "time": "2026-11-05T04:00:00Z",
+            "status": "Success",
+            "trigger": "Scheduled"
+          },
+          {
+            "time": "2026-11-04T04:00:00Z",
+            "status": "Failed",
+            "trigger": "Scheduled"
+          },
+          {
+            "time": "2026-11-04T09:12:00Z",
+            "status": "Success",
+            "trigger": "OnDemand"
+          }
+        ],
+        "runsSource": "the dataflow's refresh history (the whole dataflow refreshes together)",
+        "links": [
+          {
+            "label": "Open the dataflow in Power BI",
+            "url": "https://app.powerbi.com/"
+          }
+        ]
+      }
+    },
+    {
+      "id": "api:crm.example.com/customers",
+      "system": "api",
+      "kind": "endpoint"
+    },
+    {
+      "id": "fabric:sales_lakehouse.dbo.products",
+      "system": "fabric",
+      "kind": "table"
+    },
+    {
+      "id": "dbx:sales_cat.silver.products",
+      "system": "databricks",
+      "kind": "table",
+      "lastUpdated": "2026-11-03T05:31:00Z",
+      "freshness": {
+        "status": "failed",
+        "lastRun": "2026-11-06T05:30:00Z",
+        "job": "product_catalog_refresh",
+        "message": "last 3 runs failed; data is 3 days old"
+      },
+      "details": {
+        "writer": {
+          "jobId": "product_catalog_refresh",
+          "jobName": "product_catalog_refresh",
+          "runAs": "svc-catalog",
+          "operation": "WRITE",
+          "visible": true
+        },
+        "schedule": {
+          "summary": "Scheduled: 0 30 5 * * ? (UTC)",
+          "source": "the job's schedule setting"
+        },
+        "runs": [
+          {
+            "time": "2026-11-06T05:30:00Z",
+            "status": "Failed",
+            "message": "AnalysisException: column sku_group not found"
+          },
+          {
+            "time": "2026-11-05T05:30:00Z",
+            "status": "Failed",
+            "message": "AnalysisException: column sku_group not found"
+          },
+          {
+            "time": "2026-11-04T05:30:00Z",
+            "status": "Failed",
+            "message": "AnalysisException: column sku_group not found"
+          },
+          {
+            "time": "2026-11-03T05:31:00Z",
+            "status": "Success",
+            "rows": 4210
+          }
+        ],
+        "runsSource": "the job's run history"
+      }
+    },
+    {
+      "id": "sql:pim.dbo.product_master",
+      "system": "sqlserver",
+      "kind": "table",
+      "terminal": "origin",
+      "note": "Product information management system"
+    }
+  ],
+  "edges": [
+    {
+      "from": "dbx:sales_cat.gold.fact_sales",
+      "to": "sql:mydb.dbo.fact_sales",
+      "via": "job:sales_export",
+      "evidence": "Databricks job sales_export writes mydb.dbo.fact_sales (JDBC)",
+      "confidence": "recorded"
+    },
+    {
+      "from": "dbx:sales_cat.silver.orders",
+      "to": "dbx:sales_cat.gold.fact_sales",
+      "via": "job:sales_pipeline",
+      "evidence": "DESCRIBE HISTORY: WRITE by job sales_pipeline",
+      "confidence": "recorded"
+    },
+    {
+      "from": "sql:erp.dbo.order_lines",
+      "to": "dbx:sales_cat.silver.orders",
+      "via": "job:erp_ingest",
+      "evidence": "job erp_ingest task reads erp.dbo.order_lines",
+      "confidence": "recorded"
+    },
+    {
+      "from": "file:pos_daily_drop.csv",
+      "to": "dbx:sales_cat.silver.orders",
+      "via": "notebook:/Repos/sales/load_pos",
+      "evidence": "read notebook source: spark.read.csv('/Volumes/raw/pos/daily_drop.csv')",
+      "confidence": "inferred"
+    },
+    {
+      "from": "pbi-df:CRM Customers",
+      "to": "dbx:sales_cat.gold.dim_customer",
+      "via": "job:crm_sync",
+      "evidence": "view definition selects from the dataflow's export table",
+      "confidence": "inferred"
+    },
+    {
+      "from": "api:crm.example.com/customers",
+      "to": "pbi-df:CRM Customers",
+      "evidence": "dataflow M: Web.Contents(\"https://crm.example.com/customers\")",
+      "confidence": "recorded"
+    },
+    {
+      "from": "dbx:sales_cat.silver.products",
+      "to": "fabric:sales_lakehouse.dbo.products",
+      "via": "pipeline:copy_products",
+      "evidence": "Fabric pipeline copy_products",
+      "confidence": "recorded"
+    },
+    {
+      "from": "sql:pim.dbo.product_master",
+      "to": "dbx:sales_cat.silver.products",
+      "via": "job:product_catalog_refresh",
+      "evidence": "DESCRIBE HISTORY: WRITE by job product_catalog_refresh",
+      "confidence": "recorded"
+    }
+  ],
+  "stops": [
+    {
+      "node": "file:pos_daily_drop.csv",
+      "terminal": "best_known",
+      "reason": "file drop from the point-of-sale vendor; its upstream isn't visible"
+    },
+    {
+      "node": "api:crm.example.com/customers",
+      "terminal": "best_known",
+      "reason": "external system the agent can't reach"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+# Builds integrations/github-compare into one file (pbip-compare.mjs) and publishes it
+# as a GitHub Release asset, which mfd_utils.pbip_compare downloads.
+#
+#   push to main            → replaces the rolling "pbip-compare-main-latest" pre-release
+#   Run workflow (manually) → publishes "pbip-compare-v<version from package.json>"
+#   pull request            → build and test only
+
+name: PBIP compare release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - integrations/github-compare/**
+      - packages/core/src/**
+      - src/ui/versionCompareView.js
+      - src/ui/modelDiagramView.js
+      - src/ui/lineageView.js
+      - styles/main.css
+      - .github/workflows/pbip-compare-release.yml
+  pull_request:
+    paths:
+      - integrations/github-compare/**
+      - packages/core/src/**
+      - src/ui/versionCompareView.js
+      - src/ui/modelDiagramView.js
+      - src/ui/lineageView.js
+      - styles/main.css
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pbip-compare-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: integrations/github-compare
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Publish rolling main build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete pbip-compare-main-latest --yes --cleanup-tag || true
+          gh release create pbip-compare-main-latest \
+            dist/pbip-compare.mjs dist/pbip-compare.mjs.sha256 \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "pbip-compare (latest main)" \
+            --notes "Built from ${GITHUB_SHA}. Used by mfd_utils.pbip_compare with tool_version=\"main\" (the default)."
+
+      - name: Publish versioned release
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          gh release create "pbip-compare-v${VERSION}" \
+            dist/pbip-compare.mjs dist/pbip-compare.mjs.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "pbip-compare v${VERSION}" \
+            --notes "Pin with mfd_utils: pbip_compare.compare(..., tool_version=\"v${VERSION}\")."
